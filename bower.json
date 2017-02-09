@@ -1,0 +1,9 @@
+{
+  "name": "task",
+  "version": "0.0.0",
+  "dependencies": {
+    "d3": "^3.5.16",
+    "angular": "^1.6.2"
+  },
+  "devDependencies": {}
+}
