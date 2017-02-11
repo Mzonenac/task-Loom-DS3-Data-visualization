@@ -1,12 +1,11 @@
 var d3App = angular.module('d3App', []);
 
 d3App.controller('AppCtrl', function AppCtrl ($scope) {
-    var entity;
     $scope.data = setUpJson; // intial data set
     /*
      Find current entity in dataset by choice panel
     * */
-    $scope.selectEnt = function(name){
+    $scope.selectEntity = function(name){
         angular.forEach(setUpJson.entities, function(arr){
             if(arr.entity === name) {
                 arr? $scope.entity = arr: "";
@@ -36,7 +35,7 @@ d3App.controller('AppCtrl', function AppCtrl ($scope) {
 /* 
 DS3 visualization directive 
  */
-d3App.directive('dsVisualization', function ($compile) {
+d3App.directive('dsVisualization', function () {
     var svg,data,width,height;
     return {
         restrict: 'EA',
@@ -69,12 +68,12 @@ d3App.directive('dsVisualization', function ($compile) {
                     //resize SVG and check it if exist (initial setting 30vw x 30vw)
                     if(!svg) {
                         svg = d3.select(el[0])
-                            .append("svg")
-                            .attr("width", width)
-                            .attr("height", height);
+                                .append("svg")
+                                .attr("width", width)
+                                .attr("height", height);
                     }
                     else {
-                        svg
+                            svg
                             .attr("width", width)
                             .attr("height", height);
                     }
@@ -82,6 +81,7 @@ d3App.directive('dsVisualization', function ($compile) {
                     switch (values.type){
                         case "CONTINUOUS": scope.renderContinuos(values,width,height); break;
                         case "DISCRETE": scope.renderDiscrete(values,width,height);break;
+                        default: return false;break;
                     }
                 })
                     
@@ -91,7 +91,7 @@ d3App.directive('dsVisualization', function ($compile) {
              */
             scope.renderDiscrete = function(obj,width,height) {
                 var data,n,xScale, barHeight, margin,barWidth,color,marginTop,
-                    chartWidth,chartHeight, barMargin, deviation,minBarWidth, labelMargin,labels;
+                    chartWidth,chartHeight, barMargin, deviation,minBarWidth, labelMargin;
                 
                 data = scope.dataRender(obj.distribution.relativeParts, "occurrences");  // render data of entity
                 n = Object.keys(data).length;                                   //count of bars
@@ -102,19 +102,20 @@ d3App.directive('dsVisualization', function ($compile) {
                 chartHeight = height - (margin.top + margin.bottom);
                 barHeight = Math.round((chartHeight/n) / 3);
                 barMargin = barHeight;
-                marginTop = Math.round((chartHeight - ((barHeight * n) + (barMargin * (n - 1)))) /2);  // middle vertical align of bars
+                marginTop = Math.round(chartHeight - ((barHeight * n) + (barMargin * (n - 1))) /2);  // middle vertical align of bars
                 barWidth = Math.round(chartWidth/2);                                      // initial bar width
                 deviation = 0.25; // 25% deviation
-                minBarWidth = 0.1 // 10%
+                minBarWidth = 0.1; // 10%
                 labelMargin = 10; // Deviation label margin
+                
                 svg.selectAll('*').remove(); // clear old svg
                 color = d3.scale.category20();
                 
                 xScale = d3.scale.linear()
-                    .domain([0, d3.max(data, function(d) {
-                        return  d.value;
-                    })])
-                    .range([chartWidth, 0]);
+                                    .domain([0, d3.max(data, function(d) {
+                                        return  d.value;
+                                    })])
+                                    .range([chartWidth, 0]);
 
                 
                 // bar visualization
@@ -144,7 +145,7 @@ d3App.directive('dsVisualization', function ($compile) {
                     .attr("y", margin.top)
                     .attr("x", width * deviation)
                     .attr("width", 1)
-                    .attr("height", chartHeight - margin.bottom * 2 - margin.top )
+                    .attr("height", chartHeight - margin.bottom * 2 - margin.top );
                 
                 // Deviation line Label
                 svg.append("g")
@@ -152,8 +153,8 @@ d3App.directive('dsVisualization', function ($compile) {
                     .attr("fill","#000")
                     .attr("y", margin.top)
                     .attr("x", width * deviation + labelMargin)
-                    .text("Deviation 25%")
-                    .attr("font-size", "10px")
+                    .text("Deviation " + deviation * 100 + "%")
+                    .attr("font-size", "10px");
 
 
                 svg.selectAll("text.label")
@@ -168,10 +169,10 @@ d3App.directive('dsVisualization', function ($compile) {
                         return d.name.substr(0,20) + " (value: " + d.value + ")";
                     });
                 
-            }
+            };
             scope.renderContinuos = function(obj,width,height){
                 var n,margin,x,y,xAxis,yAxis,valueline, chartWidth,chartHeight,
-                    deviation,labelMargin,yAxis;
+                    deviation,labelMargin,points,tip;
                 
                 data = scope.dataRender(obj.distribution.relativeParts, "occurrences");    // render data of entity
                 n = Object.keys(data).length;                                              //count of points 
@@ -179,7 +180,7 @@ d3App.directive('dsVisualization', function ($compile) {
                 margin = {top: 30, right: 10, bottom: 10, left: 50};                       //margins
                 chartWidth = width - (margin.right + margin.left);
                 chartHeight = height - (margin.top + margin.bottom);
-                deviation = 0.25 //25% of deviation
+                deviation = 0.25; //25% of deviation
                 labelMargin = 50; // Deviation label margin
                 
                 svg.selectAll('*').remove();    // clear old svg
@@ -207,6 +208,14 @@ d3App.directive('dsVisualization', function ($compile) {
                     x.domain(d3.extent(data, function(d,i) { return i; }));
                     y.domain([0, d3.max(data, function(d) { return d.value; })]);
 
+                tip = d3.tip()
+                    .attr('class', 'd3-tip')
+                    .offset([-5, 0])
+                    .html(function(d) {
+                        return "<strong>Entity #" + d.name + "</strong> : <span> " + d.value + "</span>";
+                    });
+                svg.call(tip);
+                
                     // Add the valueline path.
                     svg.append("path")
                         .attr("fill","none")
@@ -216,55 +225,20 @@ d3App.directive('dsVisualization', function ($compile) {
                         .attr("stroke-linecap", "round")
                         .attr("stroke-width", 2)
                         .attr("d", valueline(data));
-                
-                // Add red line of 25% deviation
-                    svg.append("rect")
-                        .attr("fill","red")
-                        .attr("class", "redline axis")
-                        .attr("y", chartHeight * (1 - deviation))
-                        .attr("x", margin.left)
-                        .attr("width", chartWidth - margin.left)
-                        .attr("height",1);
-
-                // Add deviation text
-                    svg.append("g")
-                        .append("text")
-                        .attr("fill","#000")
-                        .attr("y", chartHeight * (1 - deviation) - 10)
-                        .attr("x", chartWidth - margin.left - margin.right - labelMargin)
-                        .text("Deviation 25%")
-                        .attr("font-size", "10px");
 
                 //Add circles for points
                     svg.selectAll("circle")
                         .data(data)
                         .enter()
                         .append('circle')
+                        .attr('class', 'points pointer')
                         .attr('r', 3)
                         .attr('cy',function(d){return y(d.value)})
                         .attr('cx', function (d,i) {
                             return x(i);})
                         .attr('fill', '#fff')
                         .attr('stroke','steelblue')
-                        .attr('stroke-width',2)
-
-                // Add values to points
-                    svg.selectAll("text.label")
-                        .data(data)
-                        .enter().append("text")
-                        .attr("class", "label chart pointer")
-                        .attr('height',20)
-                        .attr('width',20)
-                        .attr('z-index','100')
-                        .attr("text-anchor", "left")
-                        .attr("y", function(d){return y(d.value) - 2;})
-                        .attr("x", function (d,i) {
-                            return x(i) + 2;
-                        })
-                        .attr('fill','#999')
-                        .text(function(d) {
-                            return  d.value;
-                        });
+                        .attr('stroke-width',2);
 
                     // Add the X Axis
                     svg.append("g")            
@@ -288,7 +262,39 @@ d3App.directive('dsVisualization', function ($compile) {
                         .attr('shape-rendering', 'crispEdges')
                         .attr('font-size','8px')
                         .attr("text-anchor", "right")
-                        .call(yAxis)
+                        .call(yAxis);
+                
+                    svg.selectAll("rect")
+                        .data(data)
+                        .enter()
+                        .append('rect')
+                        .attr("class", "tool_tip pointer")
+                        .attr('fill','#fff')
+                        .attr('width', 20)
+                        .attr('height',20)
+                        .attr("y", function(d){return y(d.value) - 10;})
+                        .attr("x", function (d,i) {return x(i) - 10;})
+                        .on('mouseover', tip.show)
+                        .on('mouseout', tip.hide);
+
+                    // Add red line of 25% deviation
+                    svg.append("rect")
+                        .attr("fill","red")
+                        .attr("class", "redline axis")
+                        .attr("y", chartHeight * (1 - deviation))
+                        .attr("x", margin.left)
+                        .attr("width", chartWidth - margin.left)
+                        .attr("height",1);
+    
+                    // Add deviation text
+                    svg.append("g")
+                        .append("text")
+                        .attr("fill","#000")
+                        .attr("y", chartHeight * (1 - deviation) - 10)
+                        .attr("x", chartWidth - margin.left - margin.right - labelMargin)
+                        .text("Deviation " + deviation * 100 + "%")
+                        .attr("font-size", "10px");
+                        
             };
             // Render data by key
             scope.dataRender = function (data, key) {

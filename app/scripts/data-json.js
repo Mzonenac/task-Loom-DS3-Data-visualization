@@ -145,7 +145,7 @@ var setUpJson = {
                     },
                     "0E0EA66800F8D627": {
                         "ratio": 1.2987012987012987,
-                        "occurrences": 1
+                        "occurrences": 10
                     },
                     "0EA5C3C6CD5AD3DB": {
                         "ratio": 1.2987012987012987,
@@ -153,7 +153,7 @@ var setUpJson = {
                     },
                     "0EC7C355BEB683FA": {
                         "ratio": 1.2987012987012987,
-                        "occurrences": 1
+                        "occurrences": 7
                     },
                     "125A447AE403943D": {
                         "ratio": 1.2987012987012987,
@@ -161,7 +161,7 @@ var setUpJson = {
                     },
                     "1484D662E202BDF5": {
                         "ratio": 1.2987012987012987,
-                        "occurrences": 1
+                        "occurrences": 4
                     },
                     "1A57C2449D1973DF": {
                         "ratio": 1.2987012987012987,

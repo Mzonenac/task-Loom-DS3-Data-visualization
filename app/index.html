@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>TEST TASK</title>
+    <title>DS3 DATA VIZUALIZATION</title>
     <meta charset="utf-8" />
     <link rel=stylesheet type="text/css" href="styles/main.css"/>
     <link rel=stylesheet type="text/css" href="bower_components/bootstrap/dist/css/bootstrap.min.css"/>
@@ -22,8 +22,8 @@
                 <div class="wrapper">
                     <div class="content" ng-controller="AppCtrl">
                         <div class="left-bar pull-left text-center" ng-model = "data" >
-                            <div class="card text-center pointer col-xs-8 col-xs-offset-2 " ng-repeat = "en in data.entities" ng-click="selectEnt(en.entity)">
-                                <a class="btn btn-default btn-block">{{en.entity}}</a>
+                            <div class="card text-center pointer col-xs-8 col-xs-offset-2 " ng-repeat = "en in data.entities" ng-click="selectEntity(en.entity)">
+                                <a class="btn btn-info btn-block">{{en.entity}}</a>
                             </div>
                         </div>
                         <div class="pull-left ds-block" >
