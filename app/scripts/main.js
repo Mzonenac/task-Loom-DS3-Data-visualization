@@ -91,7 +91,7 @@ d3App.directive('dsVisualization', function () {
              */
             scope.renderDiscrete = function(obj,width,height) {
                 var data,n,xScale, barHeight, margin,barWidth,color,marginTop,
-                    chartWidth,chartHeight, barMargin, deviation,minBarWidth, labelMargin;
+                    chartWidth,chartHeight,barMargin,deviation,minBarWidth,labelMargin;
                 
                 data = scope.dataRender(obj.distribution.relativeParts, "occurrences");  // render data of entity
                 n = Object.keys(data).length;                                   //count of bars
@@ -102,7 +102,7 @@ d3App.directive('dsVisualization', function () {
                 chartHeight = height - (margin.top + margin.bottom);
                 barHeight = Math.round((chartHeight/n) / 3);
                 barMargin = barHeight;
-                marginTop = Math.round(chartHeight - ((barHeight * n) + (barMargin * (n - 1))) /2);  // middle vertical align of bars
+                marginTop = Math.round((chartHeight - ((barHeight * n) + (barMargin * (n - 1)))) /2);  // middle vertical align of bars
                 barWidth = Math.round(chartWidth/2);                                      // initial bar width
                 deviation = 0.25; // 25% deviation
                 minBarWidth = 0.1; // 10%
