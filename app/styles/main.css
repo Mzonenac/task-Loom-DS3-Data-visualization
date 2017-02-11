@@ -24,7 +24,9 @@
     text-align: center;
     position: relative;
     vertical-align: middle;
+    overflow: hidden;
 }
+
 .ds-content {
     display: inline-block;
     background: #fff;

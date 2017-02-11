@@ -264,6 +264,7 @@ d3App.directive('dsVisualization', function () {
                         .attr("text-anchor", "right")
                         .call(yAxis);
                 
+                    // Add tooltip mask
                     svg.selectAll("rect")
                         .data(data)
                         .enter()
