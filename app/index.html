@@ -22,12 +22,15 @@
                 <div class="wrapper">
                     <div class="content" ng-controller="AppCtrl">
                         <div class="left-bar pull-left text-center" ng-model = "data" >
-                            <div class="card text-center pointer col-xs-8 col-xs-offset-2 " ng-repeat = "subject in data.entities" ng-click="selectEnt(subject.entity)">
-                                <a class="btn btn-default btn-block">{{subject.entity}}</a>
+                            <div class="card text-center pointer col-xs-8 col-xs-offset-2 " ng-repeat = "en in data.entities" ng-click="selectEnt(en.entity)">
+                                <a class="btn btn-default btn-block">{{en.entity}}</a>
                             </div>
                         </div>
                         <div class="pull-left ds-block" >
-                            <h2 ng-if="!entity" class="animate-if text-left color-white greeting"><span class="glyphicon glyphicon-arrow-left"></span> Please choose selection</h2>
+                            <h2 ng-if="!entity" class="animate-if text-left color-white greeting">
+                                <span class="glyphicon glyphicon-arrow-left"></span>
+                                Please choose selection
+                            </h2>
                             <div class="ds-content" ng-class="[{hidden: !entity}, {minimize:!expand.status}]" ng-model="entity" ng-model="expand.status">
                                 <h4 class="col-xs-12 text-left" >{{entity.entity}} 
                                     <a class="pull-right btn btn-sm btn-default" ng-init="expand ={val: '+ Expand', status: false}" ng-click="expandSvg(expand)">
