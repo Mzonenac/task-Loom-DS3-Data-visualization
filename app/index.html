@@ -4,22 +4,46 @@
     <title>TEST TASK</title>
     <meta charset="utf-8" />
     <link rel=stylesheet type="text/css" href="styles/main.css"/>
-</head>
-<body ng-app="d3App">
-    <header>
-     <h4>DS3 VISUALIZATION</h4>
-    </header>
-    <div class="wrapper" ng-controller="AppCtrl">
-        <gh-visualization val="data"></gh-visualization>
-    </div>
-    <footer>
-        
-    </footer>
+    <link rel=stylesheet type="text/css" href="bower_components/bootstrap/dist/css/bootstrap.min.css"/>
+    <link rel=stylesheet type="text/css" href="bower_components/bootstrap/dist/css/bootstrap-theme.min.css"/>
     <!-- bower:js -->
+    <script src="bower_components/jquery/dist/jquery.js"></script>
     <script src="bower_components/d3/d3.js"></script>
     <script src="bower_components/angular/angular.js"></script>
+    <script src="bower_components/bootstrap/dist/js/bootstrap.js"></script>
+    <script src="bower_components/d3-tip/index.js"></script>
     <!-- endbower -->
-    <script src="scripts/data-json.js"></script>
-    <script src="scripts/main.js"></script>
-</body>
+</head>
+    <body ng-app="d3App"> 
+        <header>
+        </header>
+        <div class="container-fluid">
+            <div class="row">
+                <div class="wrapper">
+                    <div class="content" ng-controller="AppCtrl">
+                        <div class="left-bar pull-left text-center" ng-model = "data" >
+                            <div class="card text-center pointer col-xs-8 col-xs-offset-2 " ng-repeat = "subject in data.entities" ng-click="selectEnt(subject.entity)">
+                                <a class="btn btn-default btn-block">{{subject.entity}}</a>
+                            </div>
+                        </div>
+                        <div class="pull-left ds-block" >
+                            <h2 ng-if="!entity" class="animate-if text-left color-white greeting"><span class="glyphicon glyphicon-arrow-left"></span> Please choose selection</h2>
+                            <div class="ds-content" ng-class="[{hidden: !entity}, {minimize:!expand.status}]" ng-model="entity" ng-model="expand.status">
+                                <h4 class="col-xs-12 text-left" >{{entity.entity}} 
+                                    <a class="pull-right btn btn-sm btn-default" ng-init="expand ={val: '+ Expand', status: false}" ng-click="expandSvg(expand)">
+                                        <span ng-if="entity" class="animate-if">
+                                            {{expand.val}}
+                                        </span>
+                                    </a>
+                                </h4>
+                                <ds-visualization  expand="expand" val="entity"></ds-visualization>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script src="scripts/data-json.js"></script>
+        <script src="scripts/main.js"></script>
+    </body>
 </html>
