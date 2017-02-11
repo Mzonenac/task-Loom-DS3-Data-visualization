@@ -91,36 +91,30 @@ d3App.directive('dsVisualization', function ($compile) {
              */
             scope.renderDiscrete = function(obj,width,height) {
                 var data,n,xScale, barHeight, margin,barWidth,color,marginTop,
-                    chartWidth,chartHeight, barMargin, deviation,minBarWidth, labelMargin;
+                    chartWidth,chartHeight, barMargin, deviation,minBarWidth, labelMargin,labels;
                 
                 data = scope.dataRender(obj.distribution.relativeParts, "occurrences");  // render data of entity
                 n = Object.keys(data).length;                                   //count of bars
-                barHeight = 20;
+                barHeight = Math.round(height/n) / 3;
+                barMargin = barHeight;
                 margin = {top: 10, right: 10, bottom: 10, left: 10};            //margins
                 chartWidth = width - (margin.right + margin.left);
                 chartHeight = height - (margin.top + margin.bottom);
-                marginTop = (chartHeight - (barHeight + margin.bottom)*n) /2;  // middle vertical align of bars
-                barWidth = chartWidth/2;                                      // initial bar width
-                barMargin = 5;
+                barHeight = Math.round((chartHeight/n) / 3);
+                barMargin = barHeight;
+                marginTop = Math.round((chartHeight - ((barHeight * n) + (barMargin * (n - 1)))) /2);  // middle vertical align of bars
+                barWidth = Math.round(chartWidth/2);                                      // initial bar width
                 deviation = 0.25; // 25% deviation
                 minBarWidth = 0.1 // 10%
                 labelMargin = 10; // Deviation label margin
-
                 svg.selectAll('*').remove(); // clear old svg
                 color = d3.scale.category20();
-                
-                // color = function(val){
-                //     var color;
-                //     var l = chartWidth - xScale(val);
-                //     (l <= chartWidth/10)? color = "#aec7e8": color = "#1F77B4";
-                //     return color;
-                // }
                 
                 xScale = d3.scale.linear()
                     .domain([0, d3.max(data, function(d) {
                         return  d.value;
                     })])
-                    .range([0, chartWidth]);
+                    .range([chartWidth, 0]);
 
                 
                 // bar visualization
@@ -160,36 +154,54 @@ d3App.directive('dsVisualization', function ($compile) {
                     .attr("x", width * deviation + labelMargin)
                     .text("Deviation 25%")
                     .attr("font-size", "10px")
+
+
+                svg.selectAll("text.label")
+                    .data(data)
+                    .enter().append("text")
+                    .attr("class", "label")
+                    .attr("x", margin.left )
+                    .attr("y", function(d,i){ return  marginTop + (barHeight + barMargin) * i - 2;})
+                    .attr("text-anchor", "left")
+                    .attr('fill','#999')
+                    .text(function(d) {
+                        return d.name.substr(0,20) + " (value: " + d.value + ")";
+                    });
                 
             }
             scope.renderContinuos = function(obj,width,height){
-                var n,margin,x,y,xAxis,yAxis,valueline, chartWidth,chartHeight, ticks,deviation,labelMargin;
+                var n,margin,x,y,xAxis,yAxis,valueline, chartWidth,chartHeight,
+                    deviation,labelMargin,yAxis;
+                
                 data = scope.dataRender(obj.distribution.relativeParts, "occurrences");    // render data of entity
                 n = Object.keys(data).length;                                              //count of points 
                 
-                
-                margin = {top: 10, right: 10, bottom: 10, left: 10};                       //margins
+                margin = {top: 30, right: 10, bottom: 10, left: 50};                       //margins
                 chartWidth = width - (margin.right + margin.left);
                 chartHeight = height - (margin.top + margin.bottom);
-                ticks = 20;
                 deviation = 0.25 //25% of deviation
                 labelMargin = 50; // Deviation label margin
                 
                 svg.selectAll('*').remove();    // clear old svg
 
-                x = d3.scale.linear().range([margin.left, chartWidth]);          //set range
-                y = d3.scale.linear().range([chartHeight, margin.top]);
+                x = d3.scale.linear().range([margin.left, chartWidth]);          //set range for axis and points
+                y = d3.scale.linear().domain([0, d3.max(data, function(d) {
+                    return  d.value;
+                })]).range([chartHeight, margin.top - margin.bottom]);
+
                 
-                
+                //axis functions
                 xAxis = d3.svg.axis().scale(x)
                     .orient("bottom").ticks(n);
-                
+
                 yAxis = d3.svg.axis().scale(y)
-                    .orient("left").ticks(ticks);
+                    .orient("left").ticks(n);
                 
+                // get values 
                 valueline = d3.svg.line()
                     .x(function(d,i) { return x(i); })
                     .y(function(d) { return y(d.value); });
+                
                 
                     // Scale the range of the data
                     x.domain(d3.extent(data, function(d,i) { return i; }));
@@ -203,36 +215,7 @@ d3App.directive('dsVisualization', function ($compile) {
                         .attr("stroke-linejoin", "round")
                         .attr("stroke-linecap", "round")
                         .attr("stroke-width", 2)
-                        .attr("d", valueline(data))
-                        
-
-                    // Add the X Axis
-                    svg.append("g")
-                        .append("text")
-                        .attr("fill","#333")
-                        .attr("class", "x axis")
-                        .attr("x", margin.left + 50 )
-                        .attr("y", chartHeight)
-                        .attr("text-anchor", "end")
-                        .call(xAxis)
-                        .text("Occurrences")
-                        .attr("font-size","10px");
-                
-
-                    // Add the Y Axis
-                    svg.append("g")
-                        .append("text")
-                        .attr("fill","#333")
-                        .attr("transform", "rotate(-90)")
-                        .attr("class", "y axis")
-                        .attr("y",margin.left/2)
-                        .attr("x", -margin.top)
-                        .attr("dy", "0.71em")
-                        .attr("text-anchor", "end")
-                        .call(yAxis)
-                        .attr("d", valueline(data))
-                        .text("Values")
-                        .attr("font-size","10px");
+                        .attr("d", valueline(data));
                 
                 // Add red line of 25% deviation
                     svg.append("rect")
@@ -243,6 +226,7 @@ d3App.directive('dsVisualization', function ($compile) {
                         .attr("width", chartWidth - margin.left)
                         .attr("height",1);
 
+                // Add deviation text
                     svg.append("g")
                         .append("text")
                         .attr("fill","#000")
@@ -250,8 +234,62 @@ d3App.directive('dsVisualization', function ($compile) {
                         .attr("x", chartWidth - margin.left - margin.right - labelMargin)
                         .text("Deviation 25%")
                         .attr("font-size", "10px");
-                
-            }
+
+                //Add circles for points
+                    svg.selectAll("circle")
+                        .data(data)
+                        .enter()
+                        .append('circle')
+                        .attr('r', 3)
+                        .attr('cy',function(d){return y(d.value)})
+                        .attr('cx', function (d,i) {
+                            return x(i);})
+                        .attr('fill', '#fff')
+                        .attr('stroke','steelblue')
+                        .attr('stroke-width',2)
+
+                // Add values to points
+                    svg.selectAll("text.label")
+                        .data(data)
+                        .enter().append("text")
+                        .attr("class", "label chart pointer")
+                        .attr('height',20)
+                        .attr('width',20)
+                        .attr('z-index','100')
+                        .attr("text-anchor", "left")
+                        .attr("y", function(d){return y(d.value) - 2;})
+                        .attr("x", function (d,i) {
+                            return x(i) + 2;
+                        })
+                        .attr('fill','#999')
+                        .text(function(d) {
+                            return  d.value;
+                        });
+
+                    // Add the X Axis
+                    svg.append("g")            
+                        .attr("class", "x axis")
+                        .attr("transform", "translate(0," + (chartHeight - margin.bottom) + ")")
+                        .attr('fill', 'none')
+                        .attr('stroke', 'grey')
+                        .attr('stroke-width', 1)
+                        .attr('shape-rendering', 'crispEdges')
+                        .attr('font-size','8px')
+                        .call(xAxis);
+
+                    // Add the Y Axis
+                    svg.append("g")             
+                        .attr("class", "y axis")
+                        .attr("transform", "translate(" + (margin.left / 2 ) + ", 0)")
+                        .attr('fill', 'none')
+                        .attr('y',margin.top)
+                        .attr('stroke', 'grey')
+                        .attr('stroke-width', 1)
+                        .attr('shape-rendering', 'crispEdges')
+                        .attr('font-size','8px')
+                        .attr("text-anchor", "right")
+                        .call(yAxis)
+            };
             // Render data by key
             scope.dataRender = function (data, key) {
                 var obj = [], i = 0;

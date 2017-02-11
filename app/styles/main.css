@@ -51,3 +51,10 @@
     padding-left: 30px;
     padding-top: 8.5vh;
 }
+
+svg .label.chart {
+    /*visibility: hidden;*/
+}
+svg .label.chart:hover {
+    visibility: visible;
+}
