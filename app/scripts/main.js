@@ -1,6 +1,6 @@
 var d3App = angular.module('d3App', []);
 
-d3App.controller('AppCtrl', function AppCtrl ($scope) {
+d3App.controller('AppCtrl', function AppCtrl ($scope,$window) {
     /*
      Intial data set
       */
@@ -33,12 +33,17 @@ d3App.controller('AppCtrl', function AppCtrl ($scope) {
             }
         }
     };
+
+    /*
+     Set resize window
+     */
+    angular.element($window).on('resize', function(){ $scope.$apply() });
 });
 
 /* 
 DS3 visualization directive 
  */
-d3App.directive('dsVisualization', function ($window) {
+d3App.directive('dsVisualization', function () {
     return {
         restrict: 'EA',
         scope: {
@@ -47,10 +52,6 @@ d3App.directive('dsVisualization', function ($window) {
         },
         link: function (scope, el) {
             var svg,data,width,height;
-            /*
-             Set resize window
-              */
-            angular.element($window).on('resize', function(){ scope.$apply() });
             /*
             Call model property validation and draw object in success
              */
@@ -96,6 +97,7 @@ d3App.directive('dsVisualization', function ($window) {
                         .attr("width", width)
                         .attr("height", height);
                 }
+                svg.selectAll('*').remove(); // clear old svg
                 //type of entity different visualsation parts
                 switch (values.type) {
                     case "CONTINUOUS":
@@ -114,11 +116,11 @@ d3App.directive('dsVisualization', function ($window) {
              */
             scope.renderDiscrete = function(obj,width,height) {
                 var data,n,xScale, barHeight, margin,barWidth,color,marginTop,
-                    chartWidth,chartHeight,barMargin,deviation,minBarWidth,labelMargin;
+                    chartWidth,chartHeight,barMargin,deviation,minBarWidth,labelMargin,tip;
 
                 data = scope.dataRender(obj.distribution.relativeParts, "occurrences");  // render data of entity
                 n = Object.keys(data).length;                                   //count of bars
-                barHeight = Math.round(height/n) / 3;
+                barHeight = Math.round((height/n) / 3);
                 barMargin = barHeight;
                 margin = {top: 10, right: 10, bottom: 10, left: 10};            //margins
                 chartWidth = width - (margin.right + margin.left);
@@ -131,7 +133,6 @@ d3App.directive('dsVisualization', function ($window) {
                 minBarWidth = 0.1; // 10%
                 labelMargin = 10; // Deviation label margin
 
-                svg.selectAll('*').remove(); // clear old svg
                 color = d3.scale.category20();
 
                 xScale = d3.scale.linear()
@@ -139,7 +140,6 @@ d3App.directive('dsVisualization', function ($window) {
                                         return  d.value;
                                     })])
                                     .range([chartWidth, 0]);
-
 
                 // bar visualization
                 svg.selectAll('rect')
@@ -186,7 +186,7 @@ d3App.directive('dsVisualization', function ($window) {
                     .attr("class", "label")
                     .attr("x", margin.left )
                     .attr("y", function(d,i){ return  marginTop + (barHeight + barMargin) * i - 2;})
-                    .attr("text-anchor", "left")
+                    .attr("text-anchor", "start")
                     .attr('fill','#999')
                     .text(function(d) {
                         return d.name.substr(0,20) + " (value: " + d.value + ")";
@@ -208,8 +208,6 @@ d3App.directive('dsVisualization', function ($window) {
                 chartHeight = height - (margin.top + margin.bottom);
                 deviation = 0.25; //25% of deviation
                 labelMargin = 50; // Deviation label margin
-
-                svg.selectAll('*').remove();    // clear old svg
 
                 x = d3.scale.linear().range([margin.left, chartWidth]);          //set range for axis and points
                 y = d3.scale.linear().domain([0, d3.max(data, function(d) {
@@ -269,7 +267,7 @@ d3App.directive('dsVisualization', function ($window) {
                     // Add the X Axis
                     svg.append("g")
                         .attr("class", "x axis")
-                        .attr("transform", "translate(0," + (chartHeight - margin.bottom) + ")")
+                        .attr("transform", "translate(0," + (chartHeight) + ")")
                         .attr('fill', 'none')
                         .attr('stroke', 'grey')
                         .attr('stroke-width', 1)
@@ -287,7 +285,7 @@ d3App.directive('dsVisualization', function ($window) {
                         .attr('stroke-width', 1)
                         .attr('shape-rendering', 'crispEdges')
                         .attr('font-size','8px')
-                        .attr("text-anchor", "right")
+                        .attr("text-anchor", "start")
                         .call(yAxis);
 
                     // Add tooltip mask
@@ -333,7 +331,36 @@ d3App.directive('dsVisualization', function ($window) {
                     i++;
                 });
                 return obj;
-            }
+            };
+            /*
+             Not used method
+             */
+            scope.tooltipRender = function(){
+                var tip;
+                tip = d3.tip()
+                    .attr('class', 'd3-tip')
+                    .offset([-5, 0])
+                    .html(function (d) {
+                        return "<strong>Entity #" + d.name + "</strong> : <span> " + d.value + "</span>";
+                    });
+                svg.call(tip);
+
+                svg.selectAll('rect')
+                    .data(data).enter()
+                    .append('rect')
+                    .attr('fill','#000')
+                    .attr("class", "tool_tip pointer")
+                    .attr('x', margin.left -1)
+                    .attr('y', function(d,i){ return  marginTop + (barHeight + barMargin) * i;})
+                    .attr('height', barHeight)
+                    .attr('width', function(d) {
+                        var l = chartWidth - xScale(d.value);
+                        (l <= chartWidth * minBarWidth)? l = chartWidth * minBarWidth:"";    //set minimal width of bars
+                        return l;
+                    })
+                    .on('mouseover', tip.show)
+                    .on('mouseout', tip.hide);
+            };
         }
-    }
+    };
 });
