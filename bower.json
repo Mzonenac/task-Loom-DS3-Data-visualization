@@ -2,7 +2,7 @@
   "name": "task",
   "version": "0.0.0",
   "dependencies": {
-    "d3": "^3.5.16",
+    "d3": "^3.5.17",
     "angular": "^1.6.2",
     "bootstrap": "^3.3.7",
     "d3-tip": "^0.7.1"

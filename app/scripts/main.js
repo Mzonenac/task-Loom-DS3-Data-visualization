@@ -1,10 +1,13 @@
 var d3App = angular.module('d3App', []);
 
 d3App.controller('AppCtrl', function AppCtrl ($scope) {
-    $scope.data = setUpJson; // intial data set
+    /*
+     Intial data set
+      */
+    $scope.data = setUpJson;
     /*
      Find current entity in dataset by choice panel
-    * */
+     */
     $scope.selectEntity = function(name){
         angular.forEach(setUpJson.entities, function(arr){
             if(arr.entity === name) {
@@ -15,7 +18,7 @@ d3App.controller('AppCtrl', function AppCtrl ($scope) {
     };
     /*
      Select/deselect Expand mode by +Expand/-Minimize click button
-    * */
+     */
     $scope.expandSvg = function(v){
         if(!v.status) {
             $scope.expand = {
@@ -35,8 +38,7 @@ d3App.controller('AppCtrl', function AppCtrl ($scope) {
 /* 
 DS3 visualization directive 
  */
-d3App.directive('dsVisualization', function () {
-    var svg,data,width,height;
+d3App.directive('dsVisualization', function ($window) {
     return {
         restrict: 'EA',
         scope: {
@@ -44,55 +46,76 @@ d3App.directive('dsVisualization', function () {
             expand: '='
         },
         link: function (scope, el) {
-            //entity change event
-            scope.$watch('val', function (values) {
-                //expand mode change event
-                scope.$watch('expand', function (expand) {  
-                    if (!values)
-                        return;
-                    if (!values.distribution)
-                        return false;
-                    if (!values.distribution.relativeParts)
-                        return;
-                    
-                    if(expand.status) {
-                        //set to full size screen avoid choice panel
-                        width = window.innerWidth - 250;
-                        height = window.innerHeight - 45;
-                    }
-                    else {
-                        //set 30vw size for height and width of widget
-                        width = window.innerWidth/100 * 30; 
-                        height = window.innerWidth/100 * 30;
-                    }
-                    //resize SVG and check it if exist (initial setting 30vw x 30vw)
-                    if(!svg) {
-                        svg = d3.select(el[0])
-                                .append("svg")
-                                .attr("width", width)
-                                .attr("height", height);
-                    }
-                    else {
-                            svg
-                            .attr("width", width)
-                            .attr("height", height);
-                    }
-                    //type of entity different visualsation parts
-                    switch (values.type){
-                        case "CONTINUOUS": scope.renderContinuos(values,width,height); break;
-                        case "DISCRETE": scope.renderDiscrete(values,width,height);break;
-                        default: return false;break;
-                    }
-                })
-                    
+            var svg,data,width,height;
+            /*
+             Set resize window
+              */
+            angular.element($window).on('resize', function(){ scope.$apply() });
+            /*
+            Call model property validation and draw object in success
+             */
+            scope.$watch(function() {
+                scope.dataValidation(scope.val,scope.expand);
             });
             /*
-            Discrete mode
+             Validate models property
+             */
+            scope.dataValidation =function(values,expand) {
+                if (!values)
+                    return;
+                if (!values.distribution)
+                    return;
+                if (!values.distribution.relativeParts)
+                    return;
+
+                scope.setSizesAndType(values,expand);
+            };
+            /*
+             Set sizes, choose type, set svg
+             */
+            scope.setSizesAndType = function(values,expand){
+                if (expand.status) {
+                    //set to full size screen avoid choice panel
+                    width = window.innerWidth - 250;
+                    height = window.innerHeight - 45;
+                }
+                else {
+                    //set 30vw size for height and width of widget
+                    width = window.innerWidth / 100 * 30;
+                    height = window.innerWidth / 100 * 30;
+                }
+                //resize SVG and check it if exist (initial setting 30vw x 30vw)
+                if (!svg) {
+                    svg = d3.select(el[0])
+                        .append("svg")
+                        .attr("width", width)
+                        .attr("height", height);
+                }
+                else {
+                    svg
+                        .attr("width", width)
+                        .attr("height", height);
+                }
+                //type of entity different visualsation parts
+                switch (values.type) {
+                    case "CONTINUOUS":
+                        scope.renderContinuos(values, width, height);
+                        break;
+                    case "DISCRETE":
+                        scope.renderDiscrete(values, width, height);
+                        break;
+                    default:
+                        return false;
+                        break;
+                }
+            };
+            /*
+             Discrete mode
              */
             scope.renderDiscrete = function(obj,width,height) {
                 var data,n,xScale, barHeight, margin,barWidth,color,marginTop,
                     chartWidth,chartHeight,barMargin,deviation,minBarWidth,labelMargin;
-                
+
                 data = scope.dataRender(obj.distribution.relativeParts, "occurrences");  // render data of entity
                 n = Object.keys(data).length;                                   //count of bars
                 barHeight = Math.round(height/n) / 3;
@@ -107,19 +130,19 @@ d3App.directive('dsVisualization', function () {
                 deviation = 0.25; // 25% deviation
                 minBarWidth = 0.1; // 10%
                 labelMargin = 10; // Deviation label margin
-                
+
                 svg.selectAll('*').remove(); // clear old svg
                 color = d3.scale.category20();
-                
+
                 xScale = d3.scale.linear()
                                     .domain([0, d3.max(data, function(d) {
                                         return  d.value;
                                     })])
                                     .range([chartWidth, 0]);
 
-                
+
                 // bar visualization
-                svg.selectAll('rect')    
+                svg.selectAll('rect')
                     .data(data).enter()
                     .append('rect')
                     .attr('height', barHeight)
@@ -133,11 +156,11 @@ d3App.directive('dsVisualization', function () {
                     .transition()
                     .duration(1000)
                     .attr('width', function(d) {
-                        var l = chartWidth - xScale(d.value);          
+                        var l = chartWidth - xScale(d.value);
                         (l <= chartWidth * minBarWidth)? l = chartWidth * minBarWidth:"";    //set minimal width of bars
                         return l;
                     });
-                
+
                 // Red line 25% of deviation
                 svg.append("rect")
                     .attr("fill","red")
@@ -146,7 +169,7 @@ d3App.directive('dsVisualization', function () {
                     .attr("x", width * deviation)
                     .attr("width", 1)
                     .attr("height", chartHeight - margin.bottom * 2 - margin.top );
-                
+
                 // Deviation line Label
                 svg.append("g")
                     .append("text")
@@ -168,21 +191,24 @@ d3App.directive('dsVisualization', function () {
                     .text(function(d) {
                         return d.name.substr(0,20) + " (value: " + d.value + ")";
                     });
-                
+
             };
+            /*
+             Continuos mode
+             */
             scope.renderContinuos = function(obj,width,height){
                 var n,margin,x,y,xAxis,yAxis,valueline, chartWidth,chartHeight,
                     deviation,labelMargin,points,tip;
-                
+
                 data = scope.dataRender(obj.distribution.relativeParts, "occurrences");    // render data of entity
                 n = Object.keys(data).length;                                              //count of points 
-                
+
                 margin = {top: 30, right: 10, bottom: 10, left: 50};                       //margins
                 chartWidth = width - (margin.right + margin.left);
                 chartHeight = height - (margin.top + margin.bottom);
                 deviation = 0.25; //25% of deviation
                 labelMargin = 50; // Deviation label margin
-                
+
                 svg.selectAll('*').remove();    // clear old svg
 
                 x = d3.scale.linear().range([margin.left, chartWidth]);          //set range for axis and points
@@ -190,20 +216,20 @@ d3App.directive('dsVisualization', function () {
                     return  d.value;
                 })]).range([chartHeight, margin.top - margin.bottom]);
 
-                
+
                 //axis functions
                 xAxis = d3.svg.axis().scale(x)
                     .orient("bottom").ticks(n);
 
                 yAxis = d3.svg.axis().scale(y)
                     .orient("left").ticks(n);
-                
+
                 // get values 
                 valueline = d3.svg.line()
                     .x(function(d,i) { return x(i); })
                     .y(function(d) { return y(d.value); });
-                
-                
+
+
                     // Scale the range of the data
                     x.domain(d3.extent(data, function(d,i) { return i; }));
                     y.domain([0, d3.max(data, function(d) { return d.value; })]);
@@ -215,7 +241,7 @@ d3App.directive('dsVisualization', function () {
                         return "<strong>Entity #" + d.name + "</strong> : <span> " + d.value + "</span>";
                     });
                 svg.call(tip);
-                
+
                     // Add the valueline path.
                     svg.append("path")
                         .attr("fill","none")
@@ -241,7 +267,7 @@ d3App.directive('dsVisualization', function () {
                         .attr('stroke-width',2);
 
                     // Add the X Axis
-                    svg.append("g")            
+                    svg.append("g")
                         .attr("class", "x axis")
                         .attr("transform", "translate(0," + (chartHeight - margin.bottom) + ")")
                         .attr('fill', 'none')
@@ -252,7 +278,7 @@ d3App.directive('dsVisualization', function () {
                         .call(xAxis);
 
                     // Add the Y Axis
-                    svg.append("g")             
+                    svg.append("g")
                         .attr("class", "y axis")
                         .attr("transform", "translate(" + (margin.left / 2 ) + ", 0)")
                         .attr('fill', 'none')
@@ -263,7 +289,7 @@ d3App.directive('dsVisualization', function () {
                         .attr('font-size','8px')
                         .attr("text-anchor", "right")
                         .call(yAxis);
-                
+
                     // Add tooltip mask
                     svg.selectAll("rect")
                         .data(data)
@@ -286,7 +312,7 @@ d3App.directive('dsVisualization', function () {
                         .attr("x", margin.left)
                         .attr("width", chartWidth - margin.left)
                         .attr("height",1);
-    
+
                     // Add deviation text
                     svg.append("g")
                         .append("text")
@@ -295,9 +321,11 @@ d3App.directive('dsVisualization', function () {
                         .attr("x", chartWidth - margin.left - margin.right - labelMargin)
                         .text("Deviation " + deviation * 100 + "%")
                         .attr("font-size", "10px");
-                        
+
             };
-            // Render data by key
+            /*
+            Render data by key
+             */
             scope.dataRender = function (data, key) {
                 var obj = [], i = 0;
                 angular.forEach(data, function(o,k){
@@ -307,7 +335,5 @@ d3App.directive('dsVisualization', function () {
                 return obj;
             }
         }
-        
     }
-        
 });

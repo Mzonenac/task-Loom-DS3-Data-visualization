@@ -5,12 +5,9 @@
     <meta charset="utf-8" />
     <link rel=stylesheet type="text/css" href="styles/main.css"/>
     <link rel=stylesheet type="text/css" href="bower_components/bootstrap/dist/css/bootstrap.min.css"/>
-    <link rel=stylesheet type="text/css" href="bower_components/bootstrap/dist/css/bootstrap-theme.min.css"/>
     <!-- bower:js -->
-    <script src="bower_components/jquery/dist/jquery.js"></script>
     <script src="bower_components/d3/d3.js"></script>
     <script src="bower_components/angular/angular.js"></script>
-    <script src="bower_components/bootstrap/dist/js/bootstrap.js"></script>
     <script src="bower_components/d3-tip/index.js"></script>
     <!-- endbower -->
 </head>
@@ -23,17 +20,17 @@
                     <div class="content" ng-controller="AppCtrl">
                         <div class="left-bar pull-left text-center" ng-model = "data" >
                             <div class="card text-center pointer col-xs-8 col-xs-offset-2 " ng-repeat = "en in data.entities" ng-click="selectEntity(en.entity)">
-                                <a class="btn btn-info btn-block">{{en.entity}}</a>
+                                <a class="btn btn-warning btn-block">{{en.entity}}</a>
                             </div>
                         </div>
-                        <div class="pull-left ds-block" >
+                        <div class="pull-left ds-block">
                             <h2 ng-if="!entity" class="animate-if text-left color-white greeting">
                                 <span class="glyphicon glyphicon-arrow-left"></span>
                                 Please choose selection
                             </h2>
                             <div class="ds-content" ng-class="[{hidden: !entity}, {minimize:!expand.status}]" ng-model="entity" ng-model="expand.status">
                                 <h4 class="col-xs-12 text-left" >{{entity.entity}} 
-                                    <a class="pull-right btn btn-sm btn-default" ng-init="expand ={val: '+ Expand', status: false}" ng-click="expandSvg(expand)">
+                                    <a class="pull-right btn btn-sm btn-warning" ng-init="expand ={val: '+ Expand', status: false}" ng-click="expandSvg(expand)">
                                         <span ng-if="entity" class="animate-if">
                                             {{expand.val}}
                                         </span>

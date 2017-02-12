@@ -31,13 +31,16 @@
     display: inline-block;
     background: #fff;
     vertical-align: middle;
-    color: #999;
+    color: #555;
 }
 .ds-content.minimize {
-    margin-top: 8.5vh;
+    margin-top: 10vh;
     width: 30vw;
     height: calc( 30vw + 50px);
     height: -moz-calc( 30vw + 50px);
+    box-shadow: 0px 3px 10px 4px rgba(0,0,0,.125);
+    -webkit-box-shadow: 0px 3px 10px 4px rgba(0,0,0,.125);;
+
 }
 .ds-сontent svg {
     position: relative;
